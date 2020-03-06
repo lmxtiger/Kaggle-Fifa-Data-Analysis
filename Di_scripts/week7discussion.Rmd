@@ -1,0 +1,185 @@
+---
+title: "Week 7 Discussion"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# The Dataset
+```{r dataset}
+require(aplore3)
+data(icu)
+str(icu)
+head(icu)
+icu.fit=glm(sta~gender+age+race+loc, family=binomial(), data=icu)
+summary(icu.fit)
+```
+
+# Forward Stepwise Procedure
+```{r forward}
+## Forward stepwise model selection with p values
+# view categorical data with multiple levels as a whole
+fit0 = glm(sta~1, family=binomial(), data=icu)
+fit1 = glm(sta~gender, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+fit1 = glm(sta~age, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+fit1 = glm(sta~race, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+fit1 = glm(sta~loc, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+
+# add loc
+fit0 = glm(sta~loc, family=binomial(), data=icu)
+fit1 = glm(sta~loc+gender, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+fit1 = glm(sta~loc+age, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+fit1 = glm(sta~loc+race, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+
+# add age
+fit0 = glm(sta~loc+age, family=binomial(), data=icu)
+fit1 = glm(sta~loc+age+gender, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+fit1 = glm(sta~loc+age+race, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+
+# add race
+fit0 = glm(sta~loc+age+race, family=binomial(), data=icu)
+
+# add gender - full model
+fit = glm(sta~loc+age+race+gender, family=binomial(), data=icu)
+```
+
+# Backward Stepwise Procedure
+```{r backward}
+## Backward model selection with p values
+# view categorical data with multiple levels as a whole
+fit = glm(sta~gender+age+race+loc, family=binomial(), data=icu)
+fit1 = glm(sta~age+race+loc, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+fit1 = glm(sta~gender+race+loc, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+fit1 = glm(sta~gender+age+loc, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+fit1 = glm(sta~gender+age+race, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+
+# remove gender
+fit = glm(sta~age+race+loc, family=binomial(), data=icu)
+fit1 = glm(sta~race+loc, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+fit1 = glm(sta~age+loc, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+fit1 = glm(sta~age+race, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+
+# remove race
+fit = glm(sta~age+loc, family=binomial(), data=icu)
+fit1 = glm(sta~loc, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+fit1 = glm(sta~age, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+
+# remove age
+fit = glm(sta~loc, family=binomial(), data=icu)
+
+# remove all variables - model with only intercept
+fit = glm(sta~1, family=binomial(), data=icu)
+```
+
+# The stepwise (back-n-forth) procedure (as described in the lecture notes)
+```{r back-n-forth}
+# (1) Fit a univariate model for each covariate, 
+# and identify the predictors significant at some level p1, say 0.20. 
+# (This is the screening step.)
+fit0 = glm(sta~1, family=binomial(), data=icu)
+fit1 = glm(sta~gender, family=binomial(), data=icu)
+anova(fit0, fit1, test = "LRT")
+fit1 = glm(sta~age, family=binomial(), data=icu)
+anova(fit0, fit1, test = "LRT")
+fit1 = glm(sta~race, family=binomial(), data=icu)
+anova(fit0, fit1, test = "LRT")
+fit1 = glm(sta~loc, family=binomial(), data=icu)
+anova(fit0, fit1, test = "LRT")
+# include age and loc
+fit = glm(sta ~ age + loc, family=binomial(), data=icu)
+
+# (2) Fit a multivariate model with all significant univariate predictors, 
+# and use backward selection to eliminate non- significant variables 
+# at some level p2, say 0.15.
+fit = glm(sta ~ age + loc, family=binomial(), data=icu)
+fit1 = glm(sta ~ loc, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+fit1 = glm(sta ~ age, family=binomial(), data=icu)
+anova(fit1, fit, test = "LRT")
+# eliminate nothing
+fit = glm(sta ~ age + loc, family=binomial(), data=icu)
+
+# (3) Starting with final step (2) model, consider each of the 
+# non-significant variables from step (1) using forward selection, 
+# with significance level p3, say 0.10.
+fit0 = glm(sta ~ age + loc, family=binomial(), data=icu)
+fit1 = glm(sta ~ age + loc + gender, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+fit1 = glm(sta ~ age + loc + race, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+# add nothing
+fit = glm(sta ~ age + loc, family=binomial(), data=icu)
+
+# (4)  Do final pruning of main-effects model (omit variables that are 
+# non-significant, add any that are significant), using stepwise regression 
+# with significance level p4. At this stage, you may also consider adding 
+# interactions between any of the main effects currently in the model.
+
+# Since we did not add any variable into our model in step (3), there are 
+# no non-significant variables to omit. We will consider interactions between 
+# the main effects currently in the model. e.g., choose p4 = 0.1
+fit0 = glm(sta ~ age + loc, family=binomial(), data=icu)
+fit1 = glm(sta ~ age + loc + age*loc, family=binomial(), data=icu)
+anova(fit0,fit1, test = "LRT")
+# Not including the interactions
+# So our final model after this procesdure is 
+fit = glm(sta ~ age + loc, family=binomial(), data=icu)
+```
+
+# Treat categorical variables with multiple levels as multiindicator variables
+Instead of viewing categorical data with multiple levels as a whole, we can also view them as multiple indicator variables and consider the indicator variables as individual variables. By doing so, we may also combine differentlevels within one categorical variable during our model selection procedure.In order to do this, we can first transform the data as the following:
+
+```{r categorical}
+require(aplore3)
+data(icu)
+new.data = as.data.frame(model.matrix(~sta+gender+age+race+loc, data = icu)[,-1])
+colnames(new.data)
+```
+
+We can then do the above procedures with this new data.
+
+
+
+
+
+# Extract log likelihoods after fitting the glm()
+\quad This is important for computing the LRT, which is used for generalized $R^2$. Also for AIC (though glm gives that directly). 
+```{r ExtractLogLikelihood}
+logLik(icu.fit)
+```
+For the description of the logLik() function, use the help function.
+```{r ExtractLogLikelihood2}
+? logLik()
+```
+
+
+# Predicted values after fitting the glm()
+The estimated or predicted probabilities of response is
+$$
+\hat p_i = \frac{e^{\hat \beta_0+\hat{\beta}_1'x_i}}{1+e^{\hat \beta_0+\hat{\beta}_1'x_i}}.
+$$
+```{r predict}
+summary(predict(icu.fit))
+summary(predict(icu.fit, type = "response"))
+```
+

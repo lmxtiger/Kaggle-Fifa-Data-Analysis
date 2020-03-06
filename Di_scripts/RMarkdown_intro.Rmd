@@ -1,0 +1,224 @@
+---
+title: "RMarkdown Introduction"
+author: "Yuyao Wang"
+date: "1/30/2020"
+#output: pdf_document
+output:
+  pdf_document:
+    toc: true
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Markdown Tutorial
+Click on the following link for R Markdown tutorial:
+
+- [R Markdown Tutorial](https://rmarkdown.rstudio.com/lesson-1.html)
+
+# Installation
+You can install the R Markdown package from CRAN as follows:
+```
+install.packages("rmarkdown")
+```
+You can open a new .Rmd file in the RStudio IDE by going to File > New File > R Markdown…
+
+
+# Markdown Basics
+Markdown is a simple formatting language designed to make authoring content easy for everyone. Rather than write in complex markup code (e.g. HTML or LaTex), you write in plain text with formatting cues. Pandoc uses these cues to turn your document into attractive output. See example.Rmd for examples of basic usage.
+
+
+## Syntax
+plain text
+
+*italics* or _italics_
+
+**bold** or __bold__
+
+superscript^2
+
+~~strikethrough~~
+
+[R Markdown reference guide link](https://rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf)
+
+endash: --
+
+emdash: ---
+
+ellipsis: ...
+
+Embed LaTeX or MathML equations:
+
+inline equation: $A = \pi*r^{2}$,
+One line equation:
+$$\frac{1}{n}\sum_{i=1}^n x_i$$
+
+Or even foot notes, citations, and bibliography. [^1]
+
+[^1]: R Mardown is great.
+
+## Headers
+# Header 1
+## Header 2
+### Header 3
+#### Header 4
+##### Header 5
+###### Header 6
+> block quote
+
+* unordered list
+* item 2
+  + subitem 1
+  + subitem 2
+  
+1. ordered list
+2. item 2
+  + subitem 1
+  + subitem 2
+  
+Table Header | Second Header
+-------------|--------------
+Table Cell   | Cell 2
+Cell3        | Cell4
+
+
+
+# R Code Chunks
+Within an R Markdown file, R Code Chunks can be embedded with the native Markdown syntax for fenced code regions. 
+
+Code chunk
+```{r}
+paste("Hello","World!")
+```
+
+Add chunk options within braces. For example, 'echo = FALSE' will prevent sourse code from being displayed:
+```{r eval = TRUE, echo = FALSE}
+paste("Hello","world!")
+```
+For more infromation of chunk options, see the [R Markdown reference guide.](https://rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf)
+
+
+For example, the following code chunk computes a data summary and renders a plot as a PNG image:
+
+R Code Chunks
+======================================
+With R Markdown, you can insert R code chunks incliding plots:
+```{r qplot, fig.height=3, fig.width=4, message=FALSE}
+library(ggplot2)
+summary(cars)
+qplot(speed, dist, data = cars) + geom_smooth()
+```
+
+# Inline R Code
+You can also evaluate R expressions inline by enclosing the expression within a single back-tick qualified with ‘r’. For example, the following code embeds R results as text in the output:
+
+I count `r sum(c(1,2,3))` cars on the highway.
+
+# Rendering Output
+There are two ways to render an R Markdown document into it’s final output format. If you are using RStudio, then the “Knit” button (Ctrl+Shift+K) will render the document and display a preview of it.
+
+If you are not using RStudio then you simply need to call the rmarkdown::render function, for example:
+
+rmarkdown::render("input.Rmd")
+
+Note that both methods use the same mechanism; RStudio’s “Knit” button calls rmarkdown::render() under the hood.
+
+
+# Table
+By default, R Markdown displays data frames and matrixes as they would be in the R terminal (in a monospaced font). If you prefer that data be displayed with additional formatting you can use the knitr::kable function, as in code chunk below.
+```{r table, results = 'asis'}
+require(knitr)
+kable(mtcars[1:5,],caption = "A knitr table.")
+```
+
+Note the use of the results='asis' chunk option. This is required to ensure that the raw table output isn’t processed further by knitr.
+
+
+# Output Formats
+You can create many types of output from a single .Rmd file. R Markdown has built in support for HTML, PDF, MS_Word, ODT, RTF, Markdown, and Github flavored Markdown documents; Beamer, slidy.js, ioslides, and reveal.js slideshows; and websites, dashboards, books, handouts, package vignettes, and Shiny apps. These formats can be specified in metadata, for example:
+
+```
+---
+title: "Sample Document"
+output: pdf_document
+---
+```
+
+And you can set sub-options to customize each formats:
+```
+---
+title: "Sample Document"
+output:
+  pdf_document:
+    toc: true
+    highlight: zenburn
+---
+```
+
+Multiple formats can be specified in metadata:
+```
+---
+title: "Sample Document"
+output:
+  html_document:
+    toc: true
+    theme: united
+  pdf_document:
+    toc: true
+    highlight: zenburn
+---
+```
+If you are using rmarkdown::render then you can pass a format name to render to select from the available formats. For example:
+```
+render("input.Rmd", "pdf_document")
+```
+You can also render all formats defined in an input file with:
+```
+render("input.Rmd", "all")
+```
+
+# Code Languages
+A less well-known fact about R Markdown is that many other languages are also supported, such as Python, Julia, C++, and SQL. The support comes from the knitr package, which has provided a large number of language engines. Language engines are essentially functions registered in the object knitr::knit_engine. You can list the names of all available engines via:
+```{r}
+require(knitr)
+names(knitr::knit_engines$get())
+```
+
+To process a code chunk using an alternate language engine, replace the r at the start of your chunk declaration with the name of the language:
+```{bash}
+
+```
+For more information, click on the link [Code Languages](https://rmarkdown.rstudio.com/lesson-5.html)
+
+# Confidence Intervals
+**Central Limit Theorem.** Suppose $Y_1,Y_2,\cdots,Y_n$ are i.i.d. random varioables with $\mathbb E[Y_i]=\mu$, $Var(Y_i) = \sigma^2, and 0<\sigma^2<\infty$. Let $\bar Y = \frac{1}{n}\sum_{i=1}^n Y_i$. Then 
+$$\frac{\bar{Y} - \mu }{\sigma/\sqrt{n}} \rightarrow^d N(0,1) $$
+**Example (Binomial).** Suppose $Y\sim Binomial(n,p)$, and $X_1,\cdots,X_n$ are i.i.d. random variables from $Bernoulli(p)$.
+
+- A usual estimator for $p$ is $\hat p =\frac{Y}{n} = \bar X = \frac{1}{n}\sum_{i=1}^n X_i.$
+
+- Why? Because $\frac{1}{n}\sum_{i=1}^n X_i$ converges in probability to $p$ by Law of Large Numbers.
+
+- Since $\mathbb E[Y_i] = p$ and $Var(Y_i) = p(1-p)$, by Central Limit Theorem,
+$$\frac{\hat p - p}{\sqrt{p(1-p)/n}} \rightarrow^d N(0,1).$$
+so $$\mathbb P\left(z_{\alpha/2} < \frac{\hat p - p}{\sqrt{p(1-p)/n}} < z_{1-\alpha/2} \right)\approx 1-\alpha$$
+$$\mathbb P\left(-z_{1-\alpha/2} < \frac{\hat p - p}{\sqrt{p(1-p)/n}} < z_{1-\alpha/2} \right)\approx 1-\alpha$$
+so
+$$\mathbb P\left(-z_{1-\alpha/2} < \frac{\hat p - p}{\sqrt{\hat p(1-\hat p)/n}} < z_{1-\alpha/2} \right)\approx 1-\alpha$$
+$$\mathbb P\left(\hat p - \sqrt{\frac{\hat p(1-\hat p)}{n}}z_{1-\alpha/2} < p < \hat p + \sqrt{\frac{\hat p(1-\hat p)}{n}}z_{1-\alpha/2} \right) \approx 1-\alpha$$
+ Therefore, $(1-\alpha)$-confidence interval for p is
+ $$\left(\hat p - \sqrt{\frac{\hat p(1-\hat p)}{n}}z_{1-\alpha/2}, \ \hat p + \sqrt{\frac{\hat p(1-\hat p)}{n}}z_{1-\alpha/2}\right).$$
+
+## Sampling from a binomial distribution
+```{r sample from binomial distribution}
+# parameters for binomial distribution
+p <- 0.5
+n <- 50
+# number of observations in the sample
+m <- 10
+
+Y <- rbinom(m, n, p)  # A sample of size m from Binomial(n,p)
+Y
+```

@@ -1,0 +1,156 @@
+---
+title: "Common Distributions"
+author: "Yuqian Zhang"
+date: "January 17, 2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+For more details, see Chapter 4 of [https://www.openintro.org/book/os/](https://www.openintro.org/book/os/), or on Wikipedia.
+
+
+### Normal Distribution : $N(\mu,\sigma^2)$
+Lots of real-life distributions are nearly normal, because of the Central Limist Theorem. The density plot of a normal distribution is symmetric and bell-shaped.
+
+```{r}
+dnorm(0)
+x <- seq(-5, 5, by=0.1)
+d <- dnorm(x, mean=0, sd=1)
+plot(x, d, type="l", font.main=1, cex.main=0.9, main="Probability density function of N(0,1)")
+
+pnorm(0)
+x <- seq(-5, 5, by=0.1)
+p <- pnorm(x)
+plot(x, p, type="l", font.main=1, cex.main=0.9, main="Cumulative distribution function of N(0,1)")
+
+qnorm(0.5)
+p <- seq(0, 1, by=0.01)
+q <- qnorm(p)
+plot(p, q, type="l", font.main=1, cex.main=0.9, main="Quantile function of N(0,1)")
+
+x <- rnorm(1000)
+hist(x, font.main=1, cex.main=0.9, main="Histogram of N(0,1)", ylim = c(0, 250))
+```
+
+### Chi-squared Distribution: $\chi_k^2$
+Sum of square of $k$ independent $N(0,1)$.
+
+```{r}
+x <- seq(-1, 10, length.out=1000)
+d <- dchisq(x, df=1)
+plot(x, d, type="l", font.main=1, cex.main=0.9, main="Probability density function of Chi-squared(1)")
+
+x <- seq(-1, 10, length.out=1000)
+p <- pchisq(x, df=1)
+plot(x, p, type="l", font.main=1, cex.main=0.9, main="Cumulative distribution function of Chi-squared(1)")
+
+p <- seq(0, 1, by=0.01)
+q <- qchisq(p, df=1)
+plot(p, q, type="l", font.main=1, cex.main=0.9, main="Quantile function of Chi-squared(1)")
+
+x <- rchisq(1000, df=1)
+hist(x, font.main=1, cex.main=0.9, main="Histogram of Chi-squared(1)")
+```
+
+### Uniform Distribution (continous): Unif$(a,b)$
+Density is a constant on the support $(a,b)$.
+
+```{r}
+x <- seq(-1, 2, length.out=1000)
+d <- dunif(x, min=0, max=1)
+plot(x, d, type="l", font.main=1, cex.main=0.9, main="Probability density function of Unif(0,1)")
+
+x <- seq(-1, 2, length.out=1000)
+p <- punif(x)
+plot(x, p, type="l", font.main=1, cex.main=0.9, main="Cumulative distribution function of Unif(0,1)")
+
+p <- seq(0, 1, by=0.01)
+q <- qunif(p)
+plot(p, q, type="l", font.main=1, cex.main=0.9, main="Quantile function of Unif(0,1)")
+
+x <- runif(1000)
+hist(x, font.main=1, cex.main=0.9, main="Histogram of Unif(0,1)")
+```
+
+### Binomial Distribution: Binomial$(n,p)$
+Number of heads in n flips, $p$ is the probability of landing a head. Bernoulli$(p)$ is equivalent to Binomial$(n,p)$.
+
+```{r}
+x <- seq(1, 10, by=1)
+d <- dbinom(x, size=10, prob=0.5)
+plot(x, d, type="b", font.main=1, cex.main=0.9, main="Probability mass function of Binomial(10,0.5)")
+
+x <- seq(-1, 11, length.out=1000)
+p <- pbinom(x, size=10, prob=0.5)
+plot(x, p, type="l", font.main=1, cex.main=0.9, main="Cumulative distribution function of Binomial(10,0.5)")
+
+p <- seq(0, 1, by=0.001)
+q <- qbinom(p, size=10, prob=0.5)
+plot(p, q, type="l", font.main=1, cex.main=0.9, main="Quantile function of Binomial(10,0.5)")
+
+x <- rbinom(1000, size=10, prob=0.5)
+hist(x, font.main=1, cex.main=0.9, main="Histogram of Binomial(10,0.5)")
+```
+
+### Geometric Distribution: Geometric$(p)$
+Number of flips untill the first head.
+
+```{r}
+x <- seq(1, 10, by=1)
+d <- dgeom(x, prob=0.5)
+plot(x, d, type="b", font.main=1, cex.main=0.9, main="Probability mass function of Geometric(0.5)")
+
+x <- seq(-1, 11, length.out=1000)
+p <- pgeom(x, prob=0.5)
+plot(x, p, type="l", font.main=1, cex.main=0.9, main="Cumulative distribution function of Geometric(0.5)")
+
+p <- seq(0, 1, by=0.001)
+q <- qgeom(p, prob=0.5)
+plot(p, q, type="l", font.main=1, cex.main=0.9, main="Quantile function of Geometric(0.5)")
+
+x <- rgeom(1000, prob=0.5)
+hist(x, font.main=1, cex.main=0.9, main="Histogram of Geometric(0.5)")
+```
+
+### Poisson Distribution: Poisson$(\lambda)$
+Assume a bus comes at a constant rate. Poisson$(\lambda)$ denotes the number of buses appears in 1 hour, if the average (expectation) is $\lambda$.
+
+```{r}
+x <- seq(1, 10, by=1)
+d <- dpois(x, lambda=4)
+plot(x, d, type="b", font.main=1, cex.main=0.9, main="Probability mass function of Poisson(4)")
+
+x <- seq(-1, 11, length.out=1000)
+p <- ppois(x, lambda=4)
+plot(x, p, type="l", font.main=1, cex.main=0.9, main="Cumulative distribution function of Poisson(4)")
+
+p <- seq(0, 1, by=0.001)
+q <- qpois(p, lambda=4)
+plot(p, q, type="l", font.main=1, cex.main=0.9, main="Quantile function of Poisson(4)")
+
+x <- rpois(1000, lambda=4)
+hist(x, font.main=1, cex.main=0.9, main="Histogram of Poisson(4)")
+```
+
+### Exponential Distribution: Exponential$(\lambda)$
+Time until the next bus show up.
+
+```{r}
+x <- seq(-1, 5, length.out=1000)
+d <- dexp(x, rate=4)
+plot(x, d, type="l", font.main=1, cex.main=0.9, main="Probability density function of Exponential(4)")
+
+x <- seq(-1, 5, length.out=1000)
+p <- pexp(x, rate=4)
+plot(x, p, type="l", font.main=1, cex.main=0.9, main="Cumulative distribution function of Exponential(4)")
+
+p <- seq(0, 1, by=0.001)
+q <- qexp(p, rate=4)
+plot(p, q, type="l", font.main=1, cex.main=0.9, main="Quantile function of Exponential(4)")
+
+x <- rexp(1000, rate=4)
+hist(x, font.main=1, cex.main=0.9, main="Histogram of Exponential(4)")
+```

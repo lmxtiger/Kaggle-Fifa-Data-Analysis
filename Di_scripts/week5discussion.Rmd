@@ -1,0 +1,105 @@
+---
+title: "Week5 discussion"
+arthor: "Yuqian Zhang"
+date: "2/6/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Common Mathematical expressions in Latex (Rmarkdown)
+## Mathematical modes
+The mass-energy equivalence is described by the famous equation
+$$E=mc^2$$
+discovered in 1905 by Albert Einstein. 
+In natural units ($c$ = 1), the formula expresses the identity
+\begin{equation}
+E=m
+\end{equation}
+
+## Symbols
+Greek letters:
+$$
+\alpha,\beta,\gamma,\rho,\sigma,\delta,\epsilon,...
+$$
+Binary operators:
+$$
++,-,*,/,\times,\cdot,\cup,\cap,...
+$$
+Relation operators:
+$$
+<,>,=,\leq,\geq,\neq,\subset,\supset,\subseteq,\supseteq,...
+$$
+Others:
+$$
+\int,\sum,\prod
+$$
+
+## Subscripts and superscripts
+$$
+x^a,x^aa,x^{aa},x_n,x_n^2,\int_a^b,\sum_{i\leq10},\prod_{i=1}^{10}
+$$
+Want more? See https://www.overleaf.com/learn/latex/Mathematical_expressions or google what you want.
+
+# Chunk options in Rmarkdown 
+## Hide your code and show your result
+```{r chunk1, echo=FALSE}
+print("Invisible code!")
+```
+
+## Hide your result (show and run your code)
+```{r chunk2, echo=TRUE, results="hide"}
+x=0
+print("Invisible code?")
+```
+
+## Show your code (without running your code)
+```{r chunk3, echo=TRUE, eval=FALSE}
+x=1
+```
+$$x=`r x`$$
+
+## Append your code
+```{r ref.label=c("chunk1","chunk2","chunk3"), echo=TRUE, eval=FALSE}
+```
+Want more? See https://rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf
+
+# Delta Method
+## Theorem
+Suppose we have an asymptotically normal r.v. Y:
+$$
+\sqrt n(Y_n-\mu)\dot\sim N(0,\sigma^2),
+$$
+then
+$$
+\sqrt n[g(Y_n)-g(\mu)]\dot\sim N\left(0,[g'(\mu)]^2\sigma^2\right),
+$$
+if $g(y)$ is differentiable and $g'(\mu)\neq0$.
+
+## Example
+Suppose $\log(\hat\mu)$ is an estimator of $\log(\mu)$ that
+$$
+\sqrt n[\log(\hat\mu)-\log(\mu)]\dot\sim N(0,\sigma^2).
+$$
+Hence, we can contruct an asymptotic $95\%$ confidence interval for $\log(\mu)$:
+$$
+\log(\hat\mu)\pm1.96\sqrt{\frac{\sigma^2}{n}}
+$$
+How can be obtain an asymptotic confidence interval for $\mu$, instead of $\log(\mu)$?
+Let $g(y)=e^y$, then $g'(y)=e^y$. By Delta method,
+$$
+\sqrt n[g(\log(\hat\mu))-g(\log(\mu))]\dot\sim N\left(0,[g'(\log(\mu))]^2\sigma^2\right),
+$$
+where $g(\log(\hat\mu))=\hat\mu$, $g(\log(\mu))=g'(\log(\mu))=\mu$. That is,
+$$
+\sqrt n[\hat\mu-\mu]\dot\sim N\left(0,\mu^2\sigma^2\right).
+$$
+Therefore, an asymptotic $95\%$ confidence interval for $\mu$ can be obtained as:
+$$
+\hat\mu\pm1.96\sqrt{\frac{\mu^2\sigma^2}{n}}.
+$$
+
+

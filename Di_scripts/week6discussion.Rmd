@@ -1,0 +1,96 @@
+---
+title: "week6 discussion"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Joint probability distribution
+
+Suppose there are $K$ random variables $X_1,\dots,X_K$, the joint cumulative distribution function is
+$$
+F_{X_1,\dots,X_K}(x_1,\dots,x_K)=P(X_1\leq x_1,\dots,X_K\leq x_K).
+$$
+When $X_1,\dots,X_K$ are discrete random variables, the joint probability mass function is
+$$
+p_{X_1,\dots,X_K}(x_1,\dots,x_K)=P(X_1=x_1,\dots,X_K=x_K).
+$$
+When $X_1,\dots,X_K$ are continuous random variables, the joint probability density function is
+$$
+f_{X_1,\dots,X_K}(x_1,\dots,x_K)=\frac{\partial^KF_{X_1,\dots,X_K}(x_1,\dots,x_K)}{\partial X_1\dots\partial X_K}.
+$$
+If $X_1,\dots,X_K$ are mutually independent, then (for continuous case)
+\begin{align*}
+F_{X_1,\dots,X_K}(x_1,\dots,x_K)=\prod_{k=1}^KF_{X_k}(x_k),\\
+f_{X_1,\dots,X_K}(x_1,\dots,x_K)=\prod_{k=1}^Kf_{X_k}(x_k).
+\end{align*}
+
+# Covariance matrix
+
+Let $\mathbf{X}=(X_1,\dots,X_K)^\top\in\mathbb R^K$ and $\mathbf{Y}=(Y_1,\dots,Y_L)^\top\in\mathbb R^L$ be two random vectors. The cross-covariance matrix of $\mathbf{X}$ and $\mathbf{Y}$ is defined by
+$$
+\mathrm{cov}(\mathbf{X},\mathbf{Y})=E[(X-EX)(Y-EY)^\top]=E[XY^\top]-EX\cdot EY^\top\in\mathbb R^{K\times L}.
+$$
+The covariance matrix of $\mathbf{X}$ (also known as auto-covariance matrix, dispersion matrix, variance matrix, or variance–covariance matrix) is the cross-covariance matrix of $\mathbf{X}$ and $\mathbf{X}$,
+$$
+\mathrm{cov}(\mathbf{X},\mathbf{X})=E[(X-EX)(X-EX)^\top]=E[XX^\top]-EX\cdot EX^\top\in\mathbb R^{K\times K}.
+$$
+Properties:
+\begin{itemize}
+\item $\mathrm{cov}(\mathbf{X},\mathbf{Y})=\mathrm{cov}(\mathbf{Y},\mathbf{X})^\top$.
+\item $\mathrm{cov}(\mathbf{X_1}+\mathbf{X_2},\mathbf{Y})=\mathrm{cov}(\mathbf{X_1},\mathbf{Y})+\mathrm{cov}(\mathbf{X_2},\mathbf{Y})$.
+\item $\mathrm{cov}(A\mathbf{X}+a,B^\top\mathbf{Y}+b)=A\mathrm{cov}(\mathbf{X},\mathbf{Y})B$.
+\end{itemize}
+
+# Logistic regression
+Suppose $\mathbf{X}_1,\dots,\mathbf{X}_n\in\mathbb R^K$ are iid random vectors, where $\mathbf{X_i}=(X_{i1},\dots,X_{iK})^\top$. The logistic regression model assumes that, for $i=1,\dots,n$,
+\begin{equation}\label{eq1}
+\mathrm{logit}(p_i)=\log\left(\frac{p_i}{1-p_i}\right)=\beta_0+\beta_1x_{i1}+\dots+\beta_Kx_{iK},\quad Y_i\sim\mathrm{Bernoulli}(p_i).
+\end{equation}
+An example:
+```{r icu}
+#install.packages("aplore3") 
+require(aplore3)
+data(icu)
+summary(icu$sta)
+summary(icu$race)
+summary(icu$loc)
+fit=glm(sta~gender+age+race+loc, family=binomial(), data=icu)
+```
+Remarks:
+\begin{itemize}
+\item Be aware of the "sparsity" of your dataset. If the response or the categorical predictors are extremely unbalenced, your results might be problematic.
+\item Binary categorical predictors are treated as 0 and 1's, a general categorical predictor with $l$ levels is transformed to $l-1$ indicator variables.
+\end{itemize}
+```{r icu.summary}
+summary(fit)
+```
+Intepreting your results:
+
+The estimated coefficients $\hat\beta$ is
+```{r coef}
+fit$coefficients
+```
+The estimated variance-covariance matrix of $\hat\beta$ is
+```{r cov}
+summary(fit)$cov.unscaled
+```
+Assuming the logistic model \eqref{eq1}, the p-values when testing $\beta_k=0$ for each $k\leq K$ are
+```{r pval}
+summary(fit)$coefficients[,4]
+```
+Nested models:
+```{r anova}
+anova(fit, test="LRT")
+```
+The tests are sequential. First it tests $\beta_\mathrm{gender}=0$ under the model $\mathrm{logit}(p_i)=\beta_0+\beta_\mathrm{gender}x_{i,\mathrm{gender}}$, then it tests $\beta_\mathrm{age}=0$ under the model $\mathrm{logit}(p_i)=\beta_0+\beta_\mathrm{gender}x_{i,\mathrm{gender}}+\beta_\mathrm{age}x_{i,\mathrm{age}}$... Note that the df of race is 2, which means that we are testing $\beta_\mathrm{racewhite}=0$ and $\beta_\mathrm{raceother}=0$ simultaneously.
+
+Anova between two models:
+```{r anova2}
+fit=glm(sta~gender+age+race+loc, family=binomial(), data=icu)
+fit2=glm(sta~gender+age+loc, family=binomial(), data=icu)
+anova(fit2,fit,test="LRT")
+```
+

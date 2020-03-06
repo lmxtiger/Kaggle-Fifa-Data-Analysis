@@ -7,7 +7,7 @@ iteration=500
 avg_req <- data.frame(pHat = replicate(5, 0), empirical_var = replicate(5, 0), estimated_var = replicate(5, 0), 
                       CI_contain_count = replicate(5, 0), CI_length = replicate(5, 0), 
                       row.names = c("p_0.1", "p_0.2", "p_0.3", "p_0.4", "p_0.5"))
- 
+
 # For n = 100 and p = 0.1, 0.2, 0.3, 0.4, 0.5, respectively, simulate 500 such Y's.
 Y_p <- matrix(0, iteration, 5) # 500 * 5
 for(i in 1:5) {
