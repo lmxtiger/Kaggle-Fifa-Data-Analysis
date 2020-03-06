@@ -1,0 +1,132 @@
+---
+title: "R_Week7_Stepwise_procedures"
+author: "Minxuan Liu"
+date: "February 23, 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+print(getwd() )
+setwd("C:/Users/Minxuan Liu/Desktop/2019 winter math189")
+print(getwd() )
+
+library(dplyr)
+library(ggplot2)
+
+# Load data
+dat <- read.csv("C:/Users/Minxuan Liu/Desktop/2019 winter math189/Fifa data/Fifa_agegp_bal_na_omitted.csv",
+                stringsAsFactors = FALSE)
+```
+
+```{r}
+fit0 <- glm(wage_gp-1 ~ 1, family = binomial(), data = dat)
+fit1 <- glm(wage_gp-1 ~ Overall, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+coefficients(fit1)
+```
+
+```{r}
+# Replace NA entries in Reactions col with the mean Reactions value
+reactions_mean <- mean(dat$Reactions, na.rm = TRUE)
+dat$Reactions <- ifelse(is.na(dat$Reactions) == TRUE, reactions_mean, dat$Reactions)
+fit1 <- glm(wage_gp-1 ~ Reactions, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, " \n")
+cat("AIC: ", AIC(fit1), "\n")
+coefficients(fit1)
+```
+
+```{r}
+# Replace NA entries with the mean
+value_mean <- mean(dat$Reactions, na.rm = TRUE)
+dat$Value <- ifelse(is.na(dat$Value) == TRUE, value_mean, dat$Value)
+fit1 <- glm(wage_gp-1 ~ Value, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+coefficients(fit1)
+```
+
+```{r}
+fit1 <- glm(wage_gp-1 ~ Age, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+coefficients(fit1)
+```
+
+### Since the $p$-values for all 4 models are very small, we pick the variable with the largest absolute value of $\beta$.
+## Add $Overall$
+
+```{r}
+fit0 <- glm(wage_gp-1 ~ Overall, family = binomial(), data = dat)
+fit1 <- glm(wage_gp-1 ~ Overall + Reactions, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+```{r}
+fit1 <- glm(wage_gp-1 ~ Overall + Value, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+```{r}
+fit1 <- glm(wage_gp-1 ~ Overall + Age, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+### Add $Age$ ==> $Overall$ + $Age$
+```{r}
+fit0 <- glm(wage_gp-1 ~ Overall + Age, family = binomial(), data = dat)
+fit1 <- glm(wage_gp-1 ~ Overall + Age + Reactions, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+```{r}
+fit1 <- glm(wage_gp-1 ~ Overall + Age + Value, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+## Add $Value$ ==> $Overall$ + $Age$ + $Value$
+```{r}
+fit0 <- glm(wage_gp-1 ~ Overall + Age + Value, family = binomial(), data = dat)
+fit1 <- glm(wage_gp-1 ~ Overall + Age + Value + Reactions, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+#sprintf("R-Square: %f\n", rsq)
+#summary(fit1)
+```
+
+```{r}
+fit1 <- glm(wage_gp-1 ~ dat$Stamina, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+fit1
+```
+
+

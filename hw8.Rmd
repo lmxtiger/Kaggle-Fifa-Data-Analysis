@@ -1,0 +1,158 @@
+---
+title: "hw8"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Group members
+### Zeyun Wu A13628601
+### Jiayi Miao A15741764
+### Lisiman Hua A14055217
+### Minxuan Liu A15134427
+### Yong Zhao A14732395
+
+
+# 1) Constructive criticism for student presentations.
+Group 11,
+
+The group gives background about their dataset, the diabetes and lifestyles of Pima Indians. The group explained the difference and mechanism of type I and type II diabetes in a clear and high-level way, which helped the audience understand a lot. The group goes through the variables with a clear description of each variable and the type of variable is color-coded. The group also gives clear distribution plots of the variables explaining why some variables are used as predictors as the tendency shown in the plots. Then the group gives an illustration of stepwise selection of the variables in a clear way. 
+
+Group 12,
+
+Dataset is pretty simple and well explained. They used the wrong formula for R^2, which may be the reason that they get R^2 that’s larger than 1, and larger R^2 when adding more variables in the model. Both of these do not make sense, since R^2 should always be less than 1, and by adding more variables into the model the generalized R^2 should always bring down the generalized R^2 (although it is possible that the adjusted R^2 may increase). This group did not explain why they chose the variables. They analyze the dataset with only pairwise comparison. Did not have a clear research question and did not really predict anything.
+
+
+# 2) ROC and AUC
+
+## a) ROC and AUC of prediction on whole dataset
+## Our final model from hw7 contains covariates __Overall__, __Age__, __Value__, and interaction __Overall*Value__, with __wage_gp__ as the response variable
+
+``` {r chunk1, echo=FALSE}
+fifa <- read.csv("C:/Users/Minxuan Liu/Desktop/2019 winter math189/Fifa data/Fifa_agegp_bal_na_omitted.csv");
+#fifa$wage_gp = fifa$wage_gp
+
+# 2a
+model_a.fit = glm(wage_gp~Age+Overall+Value+Overall*Value, family=binomial(), data=fifa)
+summary(predict(model_a.fit))
+summary(predict(model_a.fit, type="response"))
+## ROC plot
+library("stats")
+library("pROC")
+plot(roc(fifa$wage_gp, predict(model_a.fit, type="response")))
+## compute AUC
+auc(fifa$wage_gp, predict(model_a.fit, type="response"))
+
+```
+
+
+## b) 90% training and 10% validation
+```{r chunk2, echo=FALSE}
+# 2b
+# 0.9training and 0.1validation
+set.seed(189)
+n = dim(fifa)[1] # number of observations
+index.train = sample(n, round(n*0.9), replace=FALSE)
+train_data = fifa[index.train, ]
+val_data = fifa[-index.train, ]
+model_b.fit = glm(wage_gp~Age+Overall+Value+Overall*Value, family=binomial(), data=train_data)
+summary(predict(model_b.fit, newdata=val_data, type="response"))
+## roc plot
+plot.roc(val_data$wage_gp, predict(model_b.fit, newdata=val_data, type="response"))
+## compute AUC
+auc(val_data$wage_gp, predict(model_b.fit, newdata=val_data, type="response"))
+```
+
+
+## c) 10-fold Cross-Validation
+```{r chunk3, echo=FALSE}
+# 2c
+# 10-fold cross-validation
+library("cvTools")
+k = 10
+set.seed(514)
+folds <- cvFolds(n=n, K=k)
+auc_arr = numeric(length = k)
+for (i in 1:k){
+  train = fifa[folds$subsets[folds$which != i], ]
+  val = fifa[folds$subsets[folds$which == i], ]
+  
+  model_c.fit = glm(wage_gp~Age+Overall+Value+Overall*Value, family=binomial(), data = train);
+  auc_arr[i] = auc(val$wage_gp, predict(model_c.fit, newdata=val, type="response"));
+}
+print("The AUC values for ten CVs:")
+auc_arr
+print("The average auc value over 10-fold CV: ")
+sum(auc_arr)/k
+```
+
+
+## d) Comment on the Result
+The ROC curve shows the tradeoff between sensitivity (true positive rate) and specificity (true negative rate), any increase in sensitivity will be accompanied by a decrease in specificity.  A perfect test has an area of 1.00. Our results show that the area under the ROC curve is 0.95 which indicates it is a good prediction. The AUC value lies between 0.5 to 1 where 0.5 denotes a bad classifier and 1 denotes an excellent classifier. Our average AUC value is 0.9499778. The results are very close to 1 which indicates our model offers a good prediction. 
+
+A: area under the curve: 0.95 
+B: Area under the curve: 0.948 
+C: auc: [1] 0.9446991 0.9540737 0.9485245 0.9437819 0.9545304 0.9554414 0.9423927
+0.9544037 0.9491614 0.9527691
+Average: 0.9499778
+
+Out-of-sample AUC comparison between 1. test-training sample (train on random 90% of dataset and predict on the rest 10%); 2. 10-fold cross validation with 10 repetition.
+
+
+# R Code
+```{r chunk4, echo=TRUE, eval=FALSE}
+fifa <- read.csv("~/course/math189/data/Fifa_agegp_bal_na_omitted.csv");
+fifa$wage_gp = fifa$wage_gp-1
+
+# 2a
+model_a.fit = glm(wage_gp~Age+Overall+Value+Overall*Value, family=binomial(), data=fifa)
+summary(predict(model_a.fit))
+summary(predict(model_a.fit, type="response"))
+## ROC plot
+library("stats")
+library("pROC")
+plot(roc(fifa$wage_gp, predict(model_a.fit, type="response")))
+## compute AUC
+auc(fifa$wage_gp, predict(model_a.fit, type="response"))
+
+# 2b
+# 0.9training and 0.1validation
+set.seed(189)
+n = dim(fifa)[1] # number of observations
+index.train = sample(n, round(n*0.9), replace=FALSE)
+train_data = fifa[index.train, ]
+val_data = fifa[-index.train, ]
+model_b.fit = glm(wage_gp~Age+Overall+Value+Overall*Value, family=binomial(), data=train_data)
+summary(predict(model_b.fit, newdata=val_data, type="response"))
+## roc plot
+plot.roc(val_data$wage_gp, predict(model_b.fit, newdata=val_data, type="response"))
+## compute AUC
+auc(val_data$wage_gp, predict(model_b.fit, newdata=val_data, type="response"))
+
+# 2c
+# 10-fold cross-validation
+library("cvTools")
+k = 10
+set.seed(514)
+folds <- cvFolds(n=n, K=k)
+auc_arr = numeric(length = k)
+for (i in 1:k){
+  train = fifa[folds$subsets[folds$which != i], ]
+  val = fifa[folds$subsets[folds$which == i], ]
+  
+  model_c.fit = glm(wage_gp~Age+Overall+Value+Overall*Value, family=binomial(), data = train);
+  auc_arr[i] = auc(val$wage_gp, predict(model_c.fit, newdata=val, type="response"));
+}
+print("The AUC values for ten CVs:")
+auc_arr
+print("The average auc value over 10-fold CV: ")
+sum(auc_arr)/k
+
+```
+

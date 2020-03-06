@@ -1,0 +1,194 @@
+---
+title: "Hw7"
+date: "2/23/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Group members
+### Zeyun Wu A13628601
+### Jiayi Miao A15741764
+### Lisiman Hua A14055217
+### Minxuan Liu A15134427
+### Yong Zhao A14732395
+
+
+
+# 1) Constructive criticism for student presentations.
+Group 9:
+The group put all variables into a table classified by the type of the variables: numerical, categorical, and miscellaneous. This is a very clear overview of what they have. It is novel that the group generates the outcome variable themselves, which is a dummy variable of profitability being the truth value of if the income is higher than budget for a movie. The research question then would be how profitability is related to vote count, runtime and vote average. The independent variables that group decided to use are all numerical, and one suggestion would be to use some of the categorical variables as well since they potentially carry useful information. It is suitable to use logistic regression to model profitability since it can be interpreted as the probability of being profitable. They went through univariate logistic regression of the three independent variables, respectively, and also a multivariate logistic regression. They listed the result clearly and also explained the meaning of the result. 
+
+Group 10,
+The introduction of regression and causal inference is pretty clear. The dataset is well introduced, and the objectives of why using the dataset is explained well. Data cleaning part is also explained. The outcome variables discussion and the univariate and multivariate logistic regressions on the variables are well interpreted.
+However, a little more introduction of the difference between the different diseases that makes the different blood pressure level will make their study more clear to the audience without related knowledge. When they explain how they decide the three variables, they used recursive variable elimination which is computationally very heavy. It is confusing as they said they compared the variables pairwise but did not explain in detail how they did it. It is also confusing as they decide the variables by solely saying these variables are not collinear, and later another member said that waist and arm circumference can be confounding variables for BMI.
+
+
+
+# 2) Logistic Regression
+## a) Describe Distribution of Target and Identify Main Predictor
+```{r chunk1, echo=FALSE}
+# import data here would be hidden
+data <- read.csv('~/course/math189/data/Fifa_agegp_bal_na_omitted.csv', stringsAsFactors = FALSE)
+
+library(ggplot2)
+
+w <- ggplot(data, aes(x=wage_gp, y=stat(count), fill=wage_gp)) + geom_bar()
+w + scale_x_discrete(labels=c("Low","High"), name="Low Wage Group      High Wage Group") + 
+  ggtitle("Distribution of the Outcome Variable Wage Group")
+
+```
+Our outcome variable is the wage group of a FIFA players. It is binomial distributed. It has 13234 observations in low wage group and 4158 observations in high wage group. 
+
+We define 'overall rating' as the main predictor. 
+
+
+## b) Identify and Discuss Other Variables
+There are many covariates in the dataset, including age, value, reactions, etc. that are related to the binary outcome (wage higher than mean or wage lower than mean). The other predictors that we would use in our logistic regression models are: 
+
+Age (binary): ranging from 16 to 47, is divided into two groups by 24, and therefore considered as a binary variable as we did for previous assignments. 
+
+Value: a continuous variable. It is the current market value measured in Euros of every player. 
+
+Reactions: a continuous covariate. It is a score value ranging from 28 to 96, given to each player in regards to how fast players react to different situations.
+
+All predictors are dependent and are related to each other. All of them with regression models may be used to predict the outcome, which is the wage level of a player. Using proper logistic regressions, they may also be used to explain the causal relationship on whether age, value, reactions, etc. can affect players’ wage levels. 
+
+
+
+## c) Univariate Logistic Regression
+
+### Logistic Regression Result
+```{r chunk2, echo=FALSE}
+# Load data
+dat <- data
+#dat$Value %>% head()
+#head(dat$Value);
+
+# Process "Value" col entries
+raw_value <- dat$Value
+for(i in 1:length(raw_value)) {
+  raw_value[i] <- substr(raw_value[i], 4, nchar(raw_value[i])-1)
+}
+dat$Value <- as.numeric(raw_value)  # as.numeric(): "Value" entries aren't all integers
+#dat$Value %>% head()
+#head(dat$Value);
+
+Overall.fit <- glm((wage_gp - 1) ~ Overall, family = binomial(), data = dat)
+summary(Overall.fit)
+Overall.odds_ra <- exp(Overall.fit$coefficients[2])
+Overall.odds_ra
+
+age_gp2.fit <- glm((wage_gp - 1) ~ age_gp2, family = binomial(), data = dat)
+summary(age_gp2.fit)
+age_gp2.odds_ra <- exp(age_gp2.fit$coefficients[2])
+age_gp2.odds_ra
+
+Reactions.fit <- glm((wage_gp - 1) ~ Reactions, family = binomial(), data = dat)
+summary(Reactions.fit)
+Reactions.odds_ra <- exp(Reactions.fit$coefficients[2])
+Reactions.odds_ra
+
+Value.fit <- glm((wage_gp - 1) ~ Value, family = binomial(), data = dat)
+summary(Value.fit)
+Value.odds_ra <- exp(Value.fit$coefficients[2])
+Value.odds_ra
+
+
+```
+
+
+### Interpretation
+Overall rating (main predictor): The z value is 57.88, and therefore the P-value is way less than 0.05. It indicates the overall rating has a statistically significant positive influence on the probability of falling into a high wage group. The value of beta is 0.540203, and beta is the log-odds ratio for a one-unit increase in the overall rating. The odds ratio is 1.716356. As it is larger than 1, it indicates that there is a higher odds of a player being recognized at the high wage group happening when he has a high overall rating.
+
+Age: The z value is 26.60, and therefore the P-value is way less than 0.05. It indicates age has a statistically significant positive influence on the probability of falling into a high wage group. The value of beta is 1.00156, which indicates that the wage level will have a large possibility of being higher with greater age. The odds ratio is 2.722525. As it is larger than 1, it indicates that there is a higher odds of a player being recognized at the high wage group happening when he is in the high age group.
+
+Value: The z value is 32.26, and therefore the P-value is way less than 0.05. It indicates the market value has a statistically significant positive influence on the probability of falling into a high wage group. The value of beta is 0.257173, beta is the log-odds ratio for a one-unit increase in market value. The odds ratio 1.293268. As it is larger than 1, it indicates that there is a higher odds of a player being recognized at the high wage group happening when he has a high value.
+
+Reactions: The z value is 58.89, and therefore the P-value is way less than 0.05. It indicates reactions has a statistically significant positive influence on the probability of falling into a high wage group. The value of beta is 0.255505, beta is the log-odds ratio for a one-unit increase in reactions. The odds ratio is 1.291113. As it is larger than 1, it indicates that there is a higher odds of a player being recognized at the high wage group happening when he has a high reaction score.
+
+
+## d) Stepwise Procedure
+```{r chunk3, echo=FALSE}
+#screening
+
+
+```
+
+
+
+
+# 3) Limitation
+First of all, our dataset is originally scraped from EA sports’ soccer video games. Although most properties of the players in the game are constructed based on real life data, there could still bel limitations if we want to apply the findings to real life situations or predictions, since we do not have the full details of whether or how the data is adjusted to make the video games more attractive to video game players. Second, the i.i.d. of our dataset is an assumption that is not fully satisfied. Some properties of a player may be dependent on those of other players in a subtle way; for example, the club that a player is in could be dependent on the clubs that other players are in, since each club would have a relatively fixed number of players. Also, the threshold of determining wage group is arbitrary, which is our outcome variable. We used the mean of wages of all players as the boundary, which could be biased by the high wages of some players. We would consider using median as the threshold so that it is not affected by extreme value and the group is automatically balanced. It is also a similar condition for the age variable. We wrote code to specifically turn the continuous variable into a categorical variable by dividing the age into two groups (age>24 and age<24) using 24 as a boundary. 24 is chosen as the number of people in each group will roughly be the same.
+
+
+
+# R Code
+```{r chunk3, echo=TRUE, eval=FALSE}
+# import data here would be hidden
+setwd("~/course/math189/data/");
+data <- read.csv('./Fifa_agegp_bal_na_omitted.csv')
+
+
+# 2(a)
+library(ggplot2)
+
+w <- ggplot(data, aes(x=wage_gp, y=stat(count), fill=wage_gp)) + geom_bar()
+w + scale_x_discrete(labels=c("Low","High"), name="Low Wage Group      High Wage Group") + 
+  ggtitle("Distribution of the Outcome Variable Wage Group")
+
+low_wage = length(data$wage_gp[data$wage_gp==1])
+high_wage = length(data$wage_gp[data$wage_gp==2])
+
+
+
+# 2(c)
+# Load data
+dat <- data
+#dat$Value %>% head()
+head(dat$Value);
+
+# Process "Value" col entries
+raw_value <- dat$Value
+for(i in 1:length(raw_value)) {
+  raw_value[i] <- substr(raw_value[i], 4, nchar(raw_value[i])-1)
+}
+dat$Value <- as.numeric(raw_value)  # as.numeric(): "Value" entries aren't all integers
+#dat$Value %>% head()
+head(dat$Value);
+
+Overall.fit <- glm((wage_gp - 1) ~ Overall, family = binomial(), data = dat)
+summary(Overall.fit)
+Overall.odds_ra <- exp(Overall.fit$coefficients[2])
+Overall.odds_ra
+
+age_gp2.fit <- glm((wage_gp - 1) ~ age_gp2, family = binomial(), data = dat)
+summary(age_gp2.fit)
+age_gp2.odds_ra <- exp(age_gp2.fit$coefficients[2])
+age_gp2.odds_ra
+
+Reactions.fit <- glm((wage_gp - 1) ~ Reactions, family = binomial(), data = dat)
+summary(Reactions.fit)
+Reactions.odds_ra <- exp(Reactions.fit$coefficients[2])
+Reactions.odds_ra
+
+Value.fit <- glm((wage_gp - 1) ~ Value, family = binomial(), data = dat)
+summary(Value.fit)
+Value.odds_ra <- exp(Value.fit$coefficients[2])
+Value.odds_ra
+
+
+
+
+# 2(d)
+
+
+```
+
+
+
+
+
+

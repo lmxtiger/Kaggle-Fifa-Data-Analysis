@@ -1,0 +1,548 @@
+---
+title: "Hw7"
+date: "2/23/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Group members
+### Zeyun Wu A13628601
+### Jiayi Miao A15741764
+### Lisiman Hua A14055217
+### Minxuan Liu A15134427
+### Yong Zhao A14732395
+
+
+
+# 1) Constructive criticism for student presentations.
+Group 9:
+The group put all variables into a table classified by the type of the variables: numerical, categorical, and miscellaneous. This is a very clear overview of what they have. It is novel that the group generates the outcome variable themselves, which is a dummy variable of profitability being the truth value of if the income is higher than budget for a movie. The research question then would be how profitability is related to vote count, runtime and vote average. The independent variables that group decided to use are all numerical, and one suggestion would be to use some of the categorical variables as well since they potentially carry useful information. It is suitable to use logistic regression to model profitability since it can be interpreted as the probability of being profitable. They went through univariate logistic regression of the three independent variables, respectively, and also a multivariate logistic regression. They listed the result clearly and also explained the meaning of the result. 
+
+Group 10,
+The introduction of regression and causal inference is pretty clear. The dataset is well introduced, and the objectives of why using the dataset is explained well. Data cleaning part is also explained. The outcome variables discussion and the univariate and multivariate logistic regressions on the variables are well interpreted.
+However, a little more introduction of the difference between the different diseases that makes the different blood pressure level will make their study more clear to the audience without related knowledge. When they explain how they decide the three variables, they used recursive variable elimination which is computationally very heavy. It is confusing as they said they compared the variables pairwise but did not explain in detail how they did it. It is also confusing as they decide the variables by solely saying these variables are not collinear, and later another member said that waist and arm circumference can be confounding variables for BMI.
+
+
+
+# 2) Logistic Regression
+## a) Describe Distribution of Target and Identify Main Predictor
+```{r chunk1, echo=FALSE}
+# import data here would be hidden
+data <- read.csv("C:/Users/Minxuan Liu/Desktop/2019 winter math189/Fifa data/Fifa_agegp_bal_na_omitted.csv", stringsAsFactors = FALSE)
+
+library(ggplot2)
+
+w <- ggplot(data, aes(x=wage_gp, y=stat(count), fill=wage_gp)) + geom_bar()
+w + scale_x_discrete(labels=c("Low","High"), name="Low Wage Group      High Wage Group") + 
+  ggtitle("Distribution of the Outcome Variable Wage Group")
+
+```
+Our outcome variable is the wage group of a FIFA players. It is binomial distributed. It has 13234 observations in low wage group and 4158 observations in high wage group. 
+
+We define 'overall rating' as the main predictor. 
+
+
+## b) Identify and Discuss Other Variables
+There are many covariates in the dataset, including age, value, reactions, etc. that are related to the binary outcome (wage higher than mean or wage lower than mean). The other predictors that we would use in our logistic regression models are: 
+
+Age (binary): ranging from 16 to 47, is divided into two groups by 24, and therefore considered as a binary variable as we did for previous assignments. 
+
+Value: a continuous variable. It is the current market value measured in Euros of every player. 
+
+Reactions: a continuous covariate. It is a score value ranging from 28 to 96, given to each player in regards to how fast players react to different situations.
+
+All predictors are dependent and are related to each other. All of them with regression models may be used to predict the outcome, which is the wage level of a player. Using proper logistic regressions, they may also be used to explain the causal relationship on whether age, value, reactions, etc. can affect players’ wage levels. 
+
+
+
+## c) Univariate Logistic Regression
+
+### Logistic Regression Result
+```{r chunk2, echo=FALSE}
+# Load data
+dat <- data
+#dat$Value %>% head()
+#head(dat$Value);
+
+# Process "Value" col entries
+raw_value <- dat$Value
+for(i in 1:length(raw_value)) {
+  raw_value[i] <- substr(raw_value[i], 4, nchar(raw_value[i])-1)
+}
+dat$Value <- as.numeric(raw_value)  # as.numeric(): "Value" entries aren't all integers
+#dat$Value %>% head()
+#head(dat$Value);
+
+Overall.fit <- glm((wage_gp) ~ Overall, family = binomial(), data = dat)
+summary(Overall.fit)
+Overall.odds_ra <- exp(Overall.fit$coefficients[2])
+Overall.odds_ra
+
+age_gp2.fit <- glm((wage_gp) ~ age_gp2, family = binomial(), data = dat)
+summary(age_gp2.fit)
+age_gp2.odds_ra <- exp(age_gp2.fit$coefficients[2])
+age_gp2.odds_ra
+
+Reactions.fit <- glm((wage_gp) ~ Reactions, family = binomial(), data = dat)
+summary(Reactions.fit)
+Reactions.odds_ra <- exp(Reactions.fit$coefficients[2])
+Reactions.odds_ra
+
+Value.fit <- glm((wage_gp) ~ Value, family = binomial(), data = dat)
+summary(Value.fit)
+Value.odds_ra <- exp(Value.fit$coefficients[2])
+Value.odds_ra
+
+
+```
+
+
+### Interpretation
+Overall rating (main predictor): The z value is 57.88, and therefore the P-value is way less than 0.05. It indicates the overall rating has a statistically significant positive influence on the probability of falling into a high wage group. The value of beta is 0.540203, and beta is the log-odds ratio for a one-unit increase in the overall rating. The odds ratio is 1.716356. As it is larger than 1, it indicates that there is a higher odds of a player being recognized at the high wage group happening when he has a high overall rating.
+
+Age: The z value is 26.60, and therefore the P-value is way less than 0.05. It indicates age has a statistically significant positive influence on the probability of falling into a high wage group. The value of beta is 1.00156, which indicates that the wage level will have a large possibility of being higher with greater age. The odds ratio is 2.722525. As it is larger than 1, it indicates that there is a higher odds of a player being recognized at the high wage group happening when he is in the high age group.
+
+Value: The z value is 32.26, and therefore the P-value is way less than 0.05. It indicates the market value has a statistically significant positive influence on the probability of falling into a high wage group. The value of beta is 0.257173, beta is the log-odds ratio for a one-unit increase in market value. The odds ratio 1.293268. As it is larger than 1, it indicates that there is a higher odds of a player being recognized at the high wage group happening when he has a high value.
+
+Reactions: The z value is 58.89, and therefore the P-value is way less than 0.05. It indicates reactions has a statistically significant positive influence on the probability of falling into a high wage group. The value of beta is 0.255505, beta is the log-odds ratio for a one-unit increase in reactions. The odds ratio is 1.291113. As it is larger than 1, it indicates that there is a higher odds of a player being recognized at the high wage group happening when he has a high reaction score.
+
+
+## d) Stepwise Procedure
+## Too much code. See "R code" section toward the end. INTERPRETATION comes after all the code.
+
+
+# 3) Limitation
+First of all, our dataset is originally scraped from EA sports’ soccer video games. Although most properties of the players in the game are constructed based on real life data, there could still bel limitations if we want to apply the findings to real life situations or predictions, since we do not have the full details of whether or how the data is adjusted to make the video games more attractive to video game players. Second, the i.i.d. of our dataset is an assumption that is not fully satisfied. Some properties of a player may be dependent on those of other players in a subtle way; for example, the club that a player is in could be dependent on the clubs that other players are in, since each club would have a relatively fixed number of players. Also, the threshold of determining wage group is arbitrary, which is our outcome variable. We used the mean of wages of all players as the boundary, which could be biased by the high wages of some players. We would consider using median as the threshold so that it is not affected by extreme value and the group is automatically balanced. It is also a similar condition for the age variable. We wrote code to specifically turn the continuous variable into a categorical variable by dividing the age into two groups (age>24 and age<24) using 24 as a boundary. 24 is chosen as the number of people in each group will roughly be the same.
+
+
+
+# R Code
+```{r chunk3, echo=TRUE, eval=FALSE}
+# import data here would be hidden
+setwd("C:/Users/Minxuan Liu/Desktop/2019 winter math189");
+data <- read.csv("C:/Users/Minxuan Liu/Desktop/2019 winter math189/Fifa data/Fifa_agegp_bal_na_omitted.csv")
+
+
+# 2(a)
+library(ggplot2)
+
+w <- ggplot(data, aes(x=wage_gp, y=stat(count), fill=wage_gp)) + geom_bar()
+w + scale_x_discrete(labels=c("Low","High"), name="Low Wage Group      High Wage Group") + 
+  ggtitle("Distribution of the Outcome Variable Wage Group")
+
+low_wage = length(data$wage_gp[data$wage_gp==1])
+high_wage = length(data$wage_gp[data$wage_gp==2])
+
+
+
+# 2(c)
+# Load data
+dat <- data
+#dat$Value %>% head()
+head(dat$Value);
+
+# Process "Value" col entries
+raw_value <- dat$Value
+for(i in 1:length(raw_value)) {
+  raw_value[i] <- substr(raw_value[i], 4, nchar(raw_value[i])-1)
+}
+dat$Value <- as.numeric(raw_value)  # as.numeric(): "Value" entries aren't all integers
+#dat$Value %>% head()
+head(dat$Value);
+
+Overall.fit <- glm((wage_gp - 1) ~ Overall, family = binomial(), data = dat)
+summary(Overall.fit)
+Overall.odds_ra <- exp(Overall.fit$coefficients[2])
+Overall.odds_ra
+
+age_gp2.fit <- glm((wage_gp - 1) ~ age_gp2, family = binomial(), data = dat)
+summary(age_gp2.fit)
+age_gp2.odds_ra <- exp(age_gp2.fit$coefficients[2])
+age_gp2.odds_ra
+
+Reactions.fit <- glm((wage_gp - 1) ~ Reactions, family = binomial(), data = dat)
+summary(Reactions.fit)
+Reactions.odds_ra <- exp(Reactions.fit$coefficients[2])
+Reactions.odds_ra
+
+Value.fit <- glm((wage_gp - 1) ~ Value, family = binomial(), data = dat)
+summary(Value.fit)
+Value.odds_ra <- exp(Value.fit$coefficients[2])
+Value.odds_ra
+
+
+# 2(d) SEE BELOW
+
+```
+
+```{r}
+print(getwd() )
+setwd("C:/Users/Minxuan Liu/Desktop/2019 winter math189")
+print(getwd() )
+
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+dat <- read.csv("C:/Users/Minxuan Liu/Desktop/2019 winter math189/Fifa data/Fifa_agegp_bal_na_omitted.csv", stringsAsFactors = FALSE)
+dat <- dat[, ! names(dat) %in%  c("X.1", "X.2")]
+# dat <- dat[, -1]
+# 
+# # Process release clause string: DONE
+# for(i in 1:length(dat$Release.Clause)) {
+#   dat$Release.Clause[i] <- substr(dat$Release.Clause[i], 4, nchar(dat$Release.Clause[i])-1)
+# }  # options(digits = 4)
+# dat$Release.Clause <- as.double(dat$Release.Clause)
+# 
+# # Process weight string: DONE
+# for(i in 1:length(dat$Weight)) {
+#   dat$Weight[i] <- substr(dat$Weight[i], 1, nchar(dat$Weight[i])-3)
+# }
+# dat$Weight <- as.numeric(dat$Weight)
+
+# Convert work rate to numerics
+# work_rate_num <- data.frame(1,2,3)
+# colnames(work_rate_num) <- c("Low", "Medium", "High")
+# wr_to_numeric <- function(string1) {
+#   # Assign 4 (medium/ medium) to any missing entries
+#   if (string1 == "") {return(4)}
+#   vec <- unlist(strsplit(string1, split = "/ "))
+#   new_int <- work_rate_num[1, vec[1]] + work_rate_num[1, vec[2]]
+#   return(new_int)
+# }
+# dat$Work.Rate.int <- lapply(dat$Work.Rate, wr_to_numeric) %>% unlist()
+
+# Convert preferred foot (left/right) to 0/1
+dat$Preferred.Foot.int <- ifelse(dat$Preferred.Foot == "Left", 0, 1)
+```
+
+```{r}
+#  Replace NA entries in Reactions col with the mean Reactions value
+reactions_mean <- mean(dat$Reactions, na.rm = TRUE)
+dat$Reactions <- ifelse(is.na(dat$Reactions) == TRUE, reactions_mean, dat$Reactions)
+
+# Replace NA entries with the mean
+value_mean <- mean(dat$Reactions, na.rm = TRUE)
+dat$Value <- ifelse(is.na(dat$Value) == TRUE, value_mean, dat$Value)
+```
+
+```{r}
+# Filter variables as independent covariates to the model
+input_vars <- which(sapply(dat, class) %in% c("integer", "numeric"))
+input_vars <- colnames(dat)[input_vars]
+drop_vars <- c("age_group", "age_wage_bi", "age_gp2", "wage_gp", "Jersey.Number")
+input_vars <- subset(input_vars, ! input_vars %in% drop_vars)
+
+# For all cols with missing entries (NA), replace them with the mean of that col
+temp_na_check <- unlist(lapply(dat[, input_vars], function(x) any(is.na(x))))
+temp_na_check <- subset(temp_na_check, temp_na_check == TRUE)
+na_col_names <- attr(temp_na_check, "names")
+na_col_names
+# for(i in 1:length(na_col_names)) {
+#   mean_col <- mean(dat[, na_col_names[i]], na.rm = TRUE)
+#   dat[, na_col_names[i]] <- ifelse(is.na(dat[, na_col_names[i]]) == TRUE, mean_col, dat[, na_col_names[i]])
+# }
+# temp_na_check <- unlist(lapply(dat[, input_vars], function(x) any(is.na(x))))
+# temp_na_check
+
+```
+
+```{r}
+uniq_wg <- unique(dat$wage_gp) %>% sort()
+dat$wage_gp <-ifelse(dat$wage_gp == uniq_wg[1], 0, 1)
+unique(dat$wage_gp) %>% sort()
+
+uniq_age <- unique(dat$age_gp2) %>% sort()
+dat$age_gp2 <-ifelse(dat$age_gp2 == uniq_age[1], 0, 1)
+unique(dat$wage_gp) %>% sort()
+
+# write.csv(dat, "C:/Users/Minxuan Liu/Desktop/2019 winter math189/Fifa data/Fifa_agegp_bal_na_omitted.csv", row.names = FALSE)
+```
+
+```{r}
+fit0 <- glm(wage_gp ~ 1, family = binomial(), data = dat)
+fit1 <- glm(wage_gp ~ Age, family = binomial(), data = dat)
+anova(fit0, fit1, test = "LRT")
+fit0 <- glm(dat$wage_gp ~ 1, family = binomial())
+fit1 <- glm(dat$wage_gp ~ dat[, "Age"], family = binomial())
+anova(fit0, fit1, test = "LRT")
+```
+
+```{r}
+# Screening: Check if p-value is too large
+
+fit0 <- glm(wage_gp ~ 1, family = binomial(), data = dat)
+input_vars <- subset(input_vars, input_vars != "Wage")
+for(i in 1:length(input_vars)) {
+  col_name <- input_vars[i]
+  fit1 <- glm(dat$wage_gp ~ dat[, col_name], family = binomial())
+  #cat(i, " ", col_name, " p-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+}
+```
+
+### Since most of the potential variables' p-values are zero, which means most of them are somewhat significant in affecting the reponse variable wage group, we arbitrarily pick 4 of them. By our intuition, "Overall rating"", "Value", "Reations", and "Age" are all highly correlated with which wage group a player belongs and actually represent 4 different aspects of a player.
+
+## Approach 1: Consider interactions from the start
+
+```{r}
+fit_const <- glm(wage_gp ~ 1, family = binomial(), data = dat)
+```
+
+```{r}
+fit_main_only <- glm(wage_gp ~ Overall + Reactions + Age + Value, family = binomial(), data = dat)
+rsq <- 1 - (logLik(fit_main_only) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("Main effects only AIC: ", AIC(fit_main_only), "\n\n")
+
+fit_whole <- glm(wage_gp ~ Overall + Reactions + Age + Value + Overall * Reactions + Overall*Age + Overall * Value + Reactions * Age + Reactions * Value + Age * Value, family = binomial(), data = dat)
+rsq <- 1 - (logLik(fit_whole) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("Whole model AIC: ", AIC(fit_whole), "\n\n")
+
+fit3 <- glm(wage_gp ~ Overall + Reactions + Age + Value + Overall*Age + Overall * Value + Reactions * Age + Reactions * Value + Age * Value, family = binomial(), data = dat)
+cat("Overall*Reactions p-value", anova(fit_whole, fit3, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit3) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit3), "\n\n")
+
+fit3 <- glm(wage_gp ~ Overall + Reactions + Age + Value + Overall * Reactions + Overall * Value + Reactions * Age + Reactions * Value + Age * Value, family = binomial(), data = dat)
+cat("Overall*Age p-value", anova(fit_whole, fit3, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit3) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit3), "\n\n")
+
+fit3 <- glm(wage_gp ~ Overall + Reactions + Age + Value + Overall * Reactions + Overall*Age + Reactions * Age + Reactions * Value + Age * Value, family = binomial(), data = dat)
+cat("Overall*Value p-value", anova(fit_whole, fit3, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit3) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit3), "\n\n")
+
+fit3 <-  glm(wage_gp ~ Overall + Reactions + Age + Value + Overall * Reactions + Overall*Age + Overall * Value + Reactions * Value + Age * Value, family = binomial(), data = dat)
+cat("Reactions*Age p-value", anova(fit_whole, fit3, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit3) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit3), "\n\n")
+
+fit3 <- glm(wage_gp ~ Overall + Reactions + Age + Value + Overall * Reactions + Overall*Age + Overall * Value + Reactions * Value + Age * Value, family = binomial(), data = dat)
+cat("Reactions*Value p-value", anova(fit_whole, fit3, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit3) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit3), "\n\n")
+
+fit3 <- glm(wage_gp ~ Overall + Reactions + Age + Value + Overall * Reactions + Overall*Age + Overall * Value + Reactions * Age + Reactions * Value, family = binomial(), data = dat)
+cat("Age*Value p-value", anova(fit_whole, fit3, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit3) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit3), "\n\n")
+```
+
+### Threshold of elimination for p-value: 0.10 ==> Eliminate __Overall*Age__, __Overall*Value__, __Age*Value__
+### Since the remaining 3 interaction terms involve all 4 covariates, we do not eliminate any of the 4 main effects. Thus, **fit_3inter** shown below is our final model.
+
+```{r}
+fit_3inter <- glm(wage_gp ~ Overall + Reactions + Age + Value + Overall * Reactions + Reactions * Age + Reactions * Value, family = binomial(), data = dat)
+rsq <- 1 - (logLik(fit_3inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("3 interactions AIC: ", AIC(fit_3inter), "\n\n")
+
+# fit_3main <- glm(wage_gp ~ Reactions + Age + Value + Overall * Reactions + Reactions * Age + Reactions * Value, family = binomial(), data = dat)
+# cat("Overall p-value: ", anova(fit_3inter, fit_3main, test = "LRT")[2, 5], "\n")
+# 
+# fit_3main <- glm(wage_gp ~ Overall + Age + Value + Overall * Reactions + Reactions * Age + Reactions * Value, family = binomial(), data = dat)
+# cat("Reactions p-value: ", anova(fit_3inter, fit_3main, test = "LRT")[2, 5], "\n")
+# 
+# fit_3main <- glm(wage_gp ~ Overall + Reactions + Value + Overall * Reactions + Reactions * Age + Reactions * Value, family = binomial(), data = dat)
+# cat("Age p-value: ", anova(fit_3inter, fit_3main, test = "LRT")[2, 5], "\n")
+# 
+# fit_3main <- glm(wage_gp ~ Overall + Reactions +Age + Overall * Reactions + Reactions * Age + Reactions * Value, family = binomial(), data = dat)
+# cat("Value p-value: ", anova(fit_3inter, fit_3main, test = "LRT")[2, 5], "\n")
+```
+
+## Approach 2: Forward selection 
+## __(FEEL FREE TO IGNORE approach 1 when grading)__
+
+```{r}
+fit0 <- glm(wage_gp ~ 1, family = binomial(), data = dat)
+fit1 <- glm(wage_gp ~ Overall, family = binomial(), data = dat)
+cat("p-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+#anova(fit0, fit1, test = "LRT")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+coefficients(fit1)
+```
+
+```{r}
+fit1 <- glm(wage_gp ~ Reactions, family = binomial(), data = dat)
+cat("p-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, " \n")
+cat("AIC: ", AIC(fit1), "\n")
+coefficients(fit1)
+```
+
+```{r}
+fit1 <- glm(wage_gp ~ Value, family = binomial(), data = dat)
+cat("p-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+coefficients(fit1)
+```
+
+```{r}
+fit1 <- glm(wage_gp ~ Age, family = binomial(), data = dat)
+cat("p-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit0))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+coefficients(fit1)
+```
+
+### Since the $p$-values for all 4 models are very small, we pick the variable with the largest absolute value of $\beta$.
+## Add $Overall$
+
+```{r}
+fit0 <- glm(wage_gp ~ Overall, family = binomial(), data = dat)
+rsq <- 1 - (logLik(fit0) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n\n")
+fit1 <- glm(wage_gp ~ Overall + Reactions, family = binomial(), data = dat)
+cat("P-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+```{r}
+fit1 <- glm(wage_gp ~ Overall + Value, family = binomial(), data = dat)
+cat("P-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+```{r}
+fit1 <- glm(wage_gp ~ Overall + Age, family = binomial(), data = dat)
+cat("P-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+### Add $Age$ ==> $Overall$ + $Age$
+```{r}
+fit0 <- glm(wage_gp ~ Overall + Age, family = binomial(), data = dat)
+rsq <- 1 - (logLik(fit0) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit0), "\n\n")
+
+fit1 <- glm(wage_gp ~ Overall + Age + Reactions, family = binomial(), data = dat)
+cat("P-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+```{r}
+fit1 <- glm(wage_gp ~ Overall + Age + Value, family = binomial(), data = dat)
+cat("P-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+```
+
+### 0.128 is not too large for a p-value ==> Add $Value$ ==> $Overall$ + $Age$ + $Value$
+```{r}
+fit0 <- glm(wage_gp ~ Overall + Age + Value, family = binomial(), data = dat)
+rsq <- 1 - (logLik(fit0) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit0), "\n\n")
+
+fit1 <- glm(wage_gp ~ Overall + Age + Value + Reactions, family = binomial(), data = dat)
+cat("P-value: ", anova(fit0, fit1, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit1) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit1), "\n")
+#summary(fit1)
+```
+
+### Here a p-value of 0.68 is too large, so we do not add $Reactions$
+
+### Consider interaction terms
+```{r}
+fit_3inter <- glm(wage_gp ~ Overall + Age + Value + Overall*Age + Overall*Value + Age*Value, family = binomial(), data = dat)
+rsq <- 1 - (logLik(fit_3inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_3inter), "\n\n")
+
+fit_2inter <-  glm(wage_gp ~ Overall + Age + Value + Overall*Value + Age*Value, family = binomial(), data = dat)
+cat("P-value: ", anova(fit_3inter, fit_2inter, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit_2inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_2inter), "\n\n")
+
+fit_2inter <-  glm(wage_gp ~ Overall + Age + Value + Overall*Age + Age*Value, family = binomial(), data = dat)
+cat("P-value: ", anova(fit_3inter, fit_2inter, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit_2inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_2inter), "\n\n")
+
+fit_2inter <-  glm(wage_gp ~ Overall + Age + Value + Overall*Age + Overall*Value, family = binomial(), data = dat)
+cat("P-value: ", anova(fit_3inter, fit_2inter, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit_2inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_2inter), "\n\n")
+```
+
+### Remove __Overall*Age__
+
+```{r}
+fit_2inter <-  glm(wage_gp ~ Overall + Age + Value + Overall*Value + Age*Value, family = binomial(), data = dat)
+#cat("P-value: ", anova(fit_3inter, fit_2inter, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit_2inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_2inter), "\n\n")
+
+fit_1inter <-  glm(wage_gp ~ Overall + Age + Value + Age*Value, family = binomial(), data = dat)
+cat("P-value: ", anova(fit_2inter, fit_1inter, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit_1inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_1inter), "\n\n")
+
+fit_1inter <-  glm(wage_gp ~ Overall + Age + Value + Overall*Value, family = binomial(), data = dat)
+cat("P-value: ", anova(fit_2inter, fit_1inter, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit_1inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_1inter), "\n\n")
+```
+
+### 0.229 is too large for p-value ==> Remove __Age*Value__
+
+```{r}
+fit_1inter <-  glm(wage_gp ~ Overall + Age + Value + Overall*Value, family = binomial(), data = dat)
+#cat("P-value: ", anova(fit_2inter, fit_1inter, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit_1inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_1inter), "\n\n")
+
+fit_0inter <- glm(wage_gp ~ Overall + Age + Value, family = binomial(), data = dat)
+cat("P-value: ", anova(fit_1inter, fit_0inter, test = "LRT")[2, 5], "\n")
+rsq <- 1 - (logLik(fit_0inter) / logLik(fit_const))
+cat("R-Square: ", rsq, "\n")
+cat("AIC: ", AIC(fit_0inter), "\n\n")
+
+summary(fit_1inter)
+```
+
+### Here p-value is very small ==> Do not remove __Overall*Value__
+
+### So our final model contains covariates __Overall__, __Age__, __Value__, and interaction (Overal:Value)
+
+## Interpretation
+Research question: How can we use several traits(variables) of a Fifa player to predict if he is in the high-wage group or the low-wage group? In other words, we want to predict if a player's wage is above the average or not given several pieces of information about him.
+By looking at the coefficients of the covariates in our final model, we can conclude higher overall rating and larger (Overall rating:Value) interaction predict higher probability of a player in the high-wage group. Similarly, older age and lower value predict higher probability of a player in the high-wage group, though the correlation here is very weak (both coefficents are less than 0.1 in terms of absolute value)

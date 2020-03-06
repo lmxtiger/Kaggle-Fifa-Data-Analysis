@@ -1,0 +1,67 @@
+---
+title: "Week4_Bino_dis_simulation"
+author: "Minxuan Liu"
+date: "February 1, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r}
+# For Y ~ Binomial (n, p), write down the formula for a 95% confidence interval (CI) of p. 
+# FORMULA: p + c(-qnorm(0.975), qnorm(0.975))*sqrt(p*(1-p)/n)
+
+n=100
+p_val <- 0.1*(1:5)
+iteration=500
+avg_req <- data.frame(pHat = replicate(5, 0), empirical_var = replicate(5, 0), estimated_var = replicate(5, 0), 
+                      CI_contain_proportion = replicate(5, 0), CI_length = replicate(5, 0), 
+                      row.names = c("p_0.1", "p_0.2", "p_0.3", "p_0.4", "p_0.5"))
+ 
+# For n = 100 and p = 0.1, 0.2, 0.3, 0.4, 0.5, respectively, simulate 500 such Y's.
+Y_p <- matrix(0, iteration, 5) # 500 * 5
+for(i in 1:5) {
+  Y_p[,i] <- rbinom(n = iteration, size = n, p_val[i]) 
+}
+
+# the average of the estimated p's (call them p_hat's)
+for(i in 1:5) {
+  avg_req[i,1] <- mean(Y_p[,i])/n
+}
+# the empirical variance of the p_hat's
+for(i in 1:5) {
+  avg_req[i, 2] = sum((Y_p[,i]/n - avg_req[i,1])**2)/(iteration-1) # Sample variance: divisor = (n-1)
+}
+# the average of the estimated variances of the p_hat's
+for(i in 1:5) {
+  avg_req[i, 3] = mean((Y_p[,i]/n)*(1-Y_p[,i]/n)/n)
+}
+# the proportion of the 95% CI's that contain the true value of p
+for(i in 1:5) {
+  lower_bool <- Y_p[,i]/n - qnorm(0.975)*sqrt(Y_p[,i]*(n-Y_p[,i])/n**3) <= p_val[i]
+  upper_bool <- Y_p[,i]/n + qnorm(0.975)*sqrt(Y_p[,i]*(n-Y_p[,i])/n**3) >= p_val[i]
+  bool_ele_sum <- apply(cbind(lower_bool, upper_bool), 1, sum)
+  avg_req[i,4] <- mean(bool_ele_sum == 2)
+}
+# the average of the length of the 95% CI's
+for(i in 1:5) {
+  avg_req[i, 5] <- mean(2*qnorm(0.975)*sqrt(Y_p[,i]*(n-Y_p[,i])/n**3))
+}
+avg_req
+
+# Discuss the simulation results.
+# As an unbiased estimator for p, p_hat's value is very very close to the true value of p for all 5 cases (p = 0.1--0.5).
+# For each p case, the empirical variance and the average of estimated variance are very close to each other, differring only by roughly
+# 10^(-4). Since p is between 0.1 and 0.5 and number of iterations (500) is relatively large, the two approaches of calculating variance # of p_hat yield very small values, ranging from 0.001 to 0.0025, with p=0.1 having the smallest variance and p=0.5 the largest.
+# The proprotions of Confidence Intervals (C.I.) containing the true value of p are all above 0.9, again with p=0.1 case having the
+# comparatively lowest proportion and p=0.5 case the highest. In other words, the proportion of CI containing the corresponding true
+# value of p goes up as p goes from "extreme" (0.1) to "neutral" (0.5). Finally, the average length of CI also increases as p approaches # the "neutral point" (0.5).Such trend can be explained by the fact that p_hat*(1-p_hat)/n increases as p_hat gets close to 0.5,
+# expanding the radius of CI.
+
+setwd('C:/Users/Minxuan Liu/Documents/R Scripts/math189')
+# knitr::stitch('Week4_Bino_dis_simulation.R')
+# To view the resulting PDF (R_script_name.pdf):
+# browseURL('Week4_Bino_dis_simulation.pdf'
+```
